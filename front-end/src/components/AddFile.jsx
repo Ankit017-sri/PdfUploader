@@ -6,33 +6,54 @@ const AddFile = () => {
   const [file, setFile] = useState(null);
   const [fileList, setFileList] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [hoveredFile,setHoveredFile] = useState(null)
+  const [hoveredFile, setHoveredFile] = useState(null);
 
   const onFileChange = (event) => {
     setFile(event.target.files[0]);
   };
 
   const onFileUpload = async () => {
+    if (!file) {
+      alert("Please select a file");
+      return;
+    }
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("upload_preset", "zujqz4jk");
+    formData.append("folder", "community platform");
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/upload",
-        formData
+        "https://api.cloudinary.com/v1_1/dsfvveqm2/raw/upload",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
       console.log(response);
-      fetchFiles(); // Refresh file list after upload
+      // fetchFiles(); // Refresh file list after upload
     } catch (error) {
-      console.error(error);
+      console.error("Error uploading file: ", error);
     }
   };
 
   const fetchFiles = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/files");
-      setFileList(response.data.files);
+      const response = await axios.get(
+        "https://api.cloudinary.com/v1_1/dsfvveqm2/resources",
+        {
+          params: {
+            prefix: "community platform/", // Replace with your folder name if applicable
+            max_results: 500, // number of resources to return, defaults to 10 without this parameter
+          },
+          headers: {
+            "X-Cloudinary-Api-Key": "171128434423736", // Replace with your Cloudinary API Key
+          },
+        }
+      );
+      console.log(response);
+      setFileList(response.data.resources);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching files: ", error);
     }
   };
 
@@ -48,13 +69,12 @@ const AddFile = () => {
     try {
       await axios.delete(`http://localhost:3000/api/files/${filename}`);
       console.log("File deleted successfully");
-      setSelectedFile(null)
-      fetchFiles(); 
+      setSelectedFile(null);
+      fetchFiles();
     } catch (error) {
       console.error(error);
     }
   };
-
 
   return (
     <div>

@@ -34,6 +34,23 @@ router.get("/files/:filename", (req, res) => {
   });
 });
 
+
+router.get("/cloudinary/resources", async (req, res) => {
+  try {
+    const cloudinaryApiKey = "171128434423736";
+    const cloudinaryApiSecret = "cXSYwK4UiyCVNhuUFZbN4vBctxQ";
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/dsfvveqm2/resources/search?api_key=${cloudinaryApiKey}&api_secret=${cloudinaryApiSecret}`
+    );
+    const data = await response.json(); // Extract JSON data from the response
+    res.json(data); // Send the extracted data as the HTTP response
+    console.log(data); // Log the data to the server console for debugging
+  } catch (error) {
+    console.error("Error fetching Cloudinary resources:", error);
+    res.status(500).json({ error: "Error fetching Cloudinary resources" });
+  }
+});
+
 router.get("/files", (req, res) => {
   const uploadsPath = path.join(__dirname, "uploads");
   fs.readdir(uploadsPath, (err, files) => {

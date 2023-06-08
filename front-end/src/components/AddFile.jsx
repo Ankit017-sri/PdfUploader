@@ -38,18 +38,7 @@ const AddFile = () => {
 
   const fetchFiles = async () => {
     try {
-      const response = await axios.get(
-        "https://api.cloudinary.com/v1_1/dsfvveqm2/resources",
-        {
-          params: {
-            prefix: "community platform/", // Replace with your folder name if applicable
-            max_results: 500, // number of resources to return, defaults to 10 without this parameter
-          },
-          headers: {
-            "X-Cloudinary-Api-Key": "171128434423736", // Replace with your Cloudinary API Key
-          },
-        }
-      );
+      const response = await axios.get("http://localhost:3000/api/cloudinary/resources",);
       console.log(response);
       setFileList(response.data.resources);
     } catch (error) {

@@ -128,7 +128,19 @@ const AddFile = () => {
 
   return (
     <div className="p-2">
-      <h1 className="text-center">EXAM SATHI</h1>
+      <div className="flex flex-row gap-3 justify-center items-center">
+        <img
+          src="/logo512.png"
+          alt="Exam Sathi"
+          className="w-14 h-14 m-0 rounded-md"
+        />
+        <h1 className="text-center text-3xl font-bold font-sans text-blue-900">
+          EXAM SATHI
+        </h1>
+      </div>
+      <h3 className="text-center my-2 underline text-lg text-purple-950 font-semibold">
+        सर्व स्पर्धा परीक्षेचे important notes आणि PDF इथे मिळतील अगदी Free.
+      </h3>
       <div className="flex items-center gap-2 mb-4">
         <input
           type="file"
@@ -138,7 +150,7 @@ const AddFile = () => {
         />
         <Button
           onClick={handleFileUpload}
-          className="bg-blue-500 rounded-lg p-3"
+          className="bg-blue-500 rounded-lg p-2"
         >
           Upload!
         </Button>
@@ -206,25 +218,27 @@ const AddFile = () => {
       <div className="flex flex-col md:flex-row">
         <div className="w-[100%] md:w-[25%] relative bg-green-500 text-white p-4 rounded-lg shadow-lg md:left-auto m-1 md:top-auto md:transform-none md:fixed md:right-0 z-20">
           <div className="flex items-center justify-center space-x-2">
-            <IconBrandWhatsapp size={20} />
-            <span>Join our Whatsapp Community</span>
+            <IconBrandWhatsapp size={30} />
+            <span>Whatsapp जॉईन करा</span>
           </div>
-          <Button onClick={handleJoinCommunity} variant="light" size="sm">
+          {/* <Button onClick={handleJoinCommunity} variant="light" size="sm">
             Join Now
-          </Button>
+          </Button> */}
         </div>
 
         <div className="flex items-center justify-start space-x-2 bg-black bg-opacity-70 w-[100%] md:w-[50%] lg:w-[30%]   text-white p-4 rounded-lg shadow-lg md:fixed md:left-4 md:bottom-4 m-1">
           <img
-            src="/google-play-store.png"
-            alt="Google Play Store"
-            className="w-full h-8 m-0"
+            src="/logo512.png"
+            alt="Exam Sathi"
+            className="w-full h-10 m-0"
           />
-          <Button className="">Download from Google Play Store</Button>
+          <Button className="">
+            Daily Revision आणि आणखी PDF साठी App Download करा
+          </Button>
         </div>
       </div>
     </div>
   );
-};  
+};
 
 export default AddFile;

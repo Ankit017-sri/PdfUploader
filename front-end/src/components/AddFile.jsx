@@ -1,79 +1,122 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import {
+  listAll,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject, // Add this import statement
+} from "firebase/storage";
+import storage from "../firebase";
 import { IconFileFilled } from "@tabler/icons-react";
-import { CloseButton, Button } from "@mantine/core";
+import { Button } from "@mantine/core";
+
 const AddFile = () => {
-  const [file, setFile] = useState(null);
   const [fileList, setFileList] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [hoveredFile, setHoveredFile] = useState(null);
-
-  const onFileChange = (event) => {
-    setFile(event.target.files[0]);
-  };
-
-  const onFileUpload = async () => {
-    if (!file) {
-      alert("Please select a file");
-      return;
-    }
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "zujqz4jk");
-    formData.append("folder", "community platform");
-    try {
-      const response = await axios.post(
-        "https://api.cloudinary.com/v1_1/dsfvveqm2/raw/upload",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-      console.log(response);
-      // fetchFiles(); // Refresh file list after upload
-    } catch (error) {
-      console.error("Error uploading file: ", error);
-    }
-  };
-
-  const fetchFiles = async () => {
-    try {
-      const response = await axios.get("http://localhost:3000/api/cloudinary/resources",);
-      console.log(response);
-      setFileList(response.data.resources);
-    } catch (error) {
-      console.error("Error fetching files: ", error);
-    }
-  };
-
-  const handleFileClick = (filename) => {
-    setSelectedFile(filename);
-  };
 
   useEffect(() => {
     fetchFiles();
   }, []);
 
+  const fetchFiles = async () => {
+    try {
+      const storageRef = ref(storage, "community platform");
+      const filesList = await listAll(storageRef);
+
+      const files = await Promise.all(
+        filesList.items.map(async (fileRef) => {
+          const url = await getDownloadURL(fileRef);
+          return {
+            filename: fileRef.name,
+            url: url,
+          };
+        })
+      );
+
+      setFileList(files);
+    } catch (error) {
+      console.error("Error fetching files: ", error);
+    }
+  };
+
+  const handleFileChange = (event) => {
+    const selectedFile = event.target.files[0];
+    if (selectedFile && selectedFile.type !== "application/pdf") {
+      alert("Please select a PDF file");
+      return;
+    }
+    setSelectedFile(selectedFile);
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFile) {
+      alert("Please select a file");
+      return;
+    }
+
+    try {
+      const storageRef = ref(
+        storage,
+        "community platform/" + selectedFile.name
+      );
+      await uploadBytesResumable(storageRef, selectedFile);
+      alert("File uploaded successfully!");
+      fetchFiles();
+    } catch (error) {
+      console.error("Error uploading file: ", error);
+      alert("An error occurred while uploading the file.");
+    }
+  };
+
+  const handleFileClick = (file) => {
+    setSelectedFile(file);
+  };
+
   const handleDeleteFile = async (filename) => {
     try {
-      await axios.delete(`http://localhost:3000/api/files/${filename}`);
+      const storageRef = ref(storage, `community platform/${filename}`);
+      await deleteObject(storageRef);
       console.log("File deleted successfully");
       setSelectedFile(null);
       fetchFiles();
     } catch (error) {
-      console.error(error);
+      console.error("Error deleting file: ", error);
+      alert("An error occurred while deleting the file.");
     }
   };
+
+const handleshare = (file) => {
+  const message = `Check out this PDF: `;
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
+    `${message}[${file.filename}](${file.url})`
+  )}`;
+  const link = document.createElement("a");
+  link.href = whatsappUrl;
+  link.target = "_blank";
+  link.click();
+};
+
+
+
+
+
+
+
 
   return (
     <div>
       <div className="items-center p-2 flex gap-2">
         <input
           type="file"
-          onChange={onFileChange}
-          className=" rounded-md p-3"
+          onChange={handleFileChange}
+          className="rounded-md p-3"
+          accept=".pdf"
         />
-        <Button onClick={onFileUpload} className="bg-blue-500 rounded-lg p-3">
+        <Button
+          onClick={handleFileUpload}
+          className="bg-blue-500 rounded-lg p-3"
+        >
           Upload!
         </Button>
       </div>
@@ -83,37 +126,40 @@ const AddFile = () => {
             <div
               key={file.filename}
               className="flex flex-col items-center relative"
-              onClick={() => handleFileClick(file.filename)}
-              onMouseEnter={() => setHoveredFile(file.filename)}
+              onClick={() => handleFileClick(file)}
+              onMouseEnter={() => setHoveredFile(file)}
               onMouseLeave={() => setHoveredFile(null)}
             >
               <IconFileFilled className="w-24 h-24" />
-              <span>{file.originalname || file.filename}</span>
+              <span>{file.filename}</span>
               <span className="truncate">
-                ({(file.size / 1048576).toFixed(2)} MB)
+                {(file.size / 1048576).toFixed(2)} MB
               </span>
-              {hoveredFile === file.filename && (
-                <button
-                  className="absolute top-0 right-0 p-2 text-gray-500 hover:text-red-500"
-                  onClick={() => handleDeleteFile(file.filename)}
-                  aria-label="Delete file"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    stroke-width="2"
-                    stroke="currentColor"
-                    fill="red"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+              {hoveredFile === file && (
+                <div>
+                  <button
+                    className="absolute top-0 right-0 p-2 text-gray-500 hover:text-red-500"
+                    onClick={() => handleDeleteFile(file.filename)}
+                    aria-label="Delete file"
                   >
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                    <path d="M18 6l-12 12"></path>
-                    <path d="M6 6l12 12"></path>
-                  </svg>
-                </button>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      strokeWidth="2"
+                      stroke="currentColor"
+                      fill="red"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M18 6l-12 12" />
+                      <path d="M6 6l12 12" />
+                    </svg>
+                  </button>
+                  <button onClick={() =>handleshare(file)}>Share</button>{" "}
+                </div>
               )}
             </div>
           ))}
@@ -121,9 +167,9 @@ const AddFile = () => {
         <div className="w-[55%] m-2">
           {selectedFile ? (
             <div>
-              <h3>Selected File: {selectedFile}</h3>
+              <h3>Selected File: {selectedFile.filename}</h3>
               <embed
-                src={`http://localhost:3000/api/files/${selectedFile}`}
+                src={selectedFile.url}
                 width="100%"
                 height="900px"
                 type="application/pdf"
